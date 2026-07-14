@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.zip
+*.png
+*.jpg
+.vscode/
+.idea/
+.DS_Store
+*.log
+output_ai4i/
+data_metropt3/
+real_datasets/
+viz_quick/
+viz_med/

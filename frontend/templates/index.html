@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predictive Maintenance Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<div class="app-layout">
+
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner-large"></div>
+    <div style="color:var(--text-secondary);font-size:14px;">Loading...</div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">&#9881;</div>
+      <div>
+        <h1>PrediMain</h1>
+        <div class="subtitle">Predictive Maintenance</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="dashboard">
+        <span class="nav-icon">&#128202;</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-section="machines">
+        <span class="nav-icon">&#128421;</span>
+        <span class="nav-label">Machines</span>
+      </button>
+      <button class="nav-item" data-section="predictions">
+        <span class="nav-icon">&#128302;</span>
+        <span class="nav-label">Predictions</span>
+      </button>
+      <button class="nav-item" data-section="training">
+        <span class="nav-icon">&#129504;</span>
+        <span class="nav-label">Training</span>
+      </button>
+      <button class="nav-item" data-section="analytics">
+        <span class="nav-icon">&#128200;</span>
+        <span class="nav-label">Analytics</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      v1.0 &middot; Railway Ticketing
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="page-section active" id="dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p>Overview of your predictive maintenance system &middot; Last refreshed: <span id="last-refresh">—</span></p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card info">
+          <div class="stat-icon">&#127963;</div>
+          <div class="stat-label">Total Machines</div>
+          <div class="stat-value" id="stat-machines">—</div>
+          <div class="stat-sub">Registered terminals</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon">&#128230;</div>
+          <div class="stat-label">Records</div>
+          <div class="stat-value" id="stat-records">—</div>
+          <div class="stat-sub">Dynamic sensor readings</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon">&#9888;</div>
+          <div class="stat-label">At Risk</div>
+          <div class="stat-value" id="stat-at-risk">—</div>
+          <div class="stat-sub">Machines needing attention</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon">&#128201;</div>
+          <div class="stat-label">Fault Rate</div>
+          <div class="stat-value" id="stat-fault-rate">—</div>
+          <div class="stat-sub">Overall failure percentage</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">&#129504;</div>
+          <div class="stat-label">Models</div>
+          <div class="stat-value" id="stat-models">—</div>
+          <div class="stat-sub">Trained model checkpoints</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon">&#128293;</div>
+          <div class="stat-label">Total Faults</div>
+          <div class="stat-value" id="stat-total-faults">—</div>
+          <div class="stat-sub">Labeled failure events</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3>Top At-Risk Machines</h3>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Machine</th>
+                    <th>Fault Probability</th>
+                    <th>Predicted RUL</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="top-risk-body">
+                  <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Failure Mode Distribution</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" id="fm-chart" style="min-height:260px;">
+              <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MACHINES ============ -->
+    <section class="page-section" id="machines">
+      <div class="page-header">
+        <h2>Machines</h2>
+        <p>Browse and inspect all registered ticketing machines</p>
+      </div>
+
+      <div class="toolbar">
+        <input class="form-input" id="machine-search" type="text" placeholder="Search by machine code..." style="min-width:240px;" />
+        <span id="machines-count" style="color:var(--text-secondary);font-size:13px;margin-left:auto;">Loading...</span>
+      </div>
+
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Machine Code</th>
+                  <th>Type</th>
+                  <th>Platform</th>
+                  <th>ASA Version</th>
+                  <th>Fault Prob.</th>
+                  <th>RUL</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="machines-body">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PREDICTIONS ============ -->
+    <section class="page-section" id="predictions">
+      <div class="page-header">
+        <h2>Predictions</h2>
+        <p>Run inference on machines to detect faults and estimate remaining useful life</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Model</div>
+              <select class="form-select" id="pred-model" style="min-width:160px;"></select>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Sequence Length</div>
+              <select class="form-select" id="pred-seqlen" style="min-width:120px;">
+                <option value="12">12 steps</option>
+                <option value="24" selected>24 steps</option>
+                <option value="48">48 steps</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="run-prediction" style="margin-top:18px;">&#9654; Run Predictions</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pred-info"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Prediction Results</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Machine</th>
+                  <th>Fault Probability</th>
+                  <th>Confidence</th>
+                  <th>Predicted RUL</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="predictions-body">
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TRAINING ============ -->
+    <section class="page-section" id="training">
+      <div class="page-header">
+        <h2>Training</h2>
+        <p>Configure and train the Transformer model on synthetic or real data</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>Training Configuration</h3></div>
+          <div class="card-body">
+            <form id="train-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Machines</label>
+                  <input class="form-input" type="number" name="num_machines" value="100" min="10" max="50000" />
+                </div>
+                <div class="form-group">
+                  <label>Days of History</label>
+                  <input class="form-input" type="number" name="days" value="30" min="7" max="365" />
+                </div>
+                <div class="form-group">
+                  <label>Epochs</label>
+                  <input class="form-input" type="number" name="epochs" value="5" min="1" max="100" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Sequence Length</label>
+                  <input class="form-input" type="number" name="seq_len" value="24" min="8" max="128" />
+                </div>
+                <div class="form-group">
+                  <label>Stride</label>
+                  <input class="form-input" type="number" name="stride" value="8" min="1" max="64" />
+                </div>
+                <div class="form-group">
+                  <label>d_model</label>
+                  <input class="form-input" type="number" name="d_model" value="64" min="16" max="512" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Attention Heads</label>
+                  <input class="form-input" type="number" name="nhead" value="4" min="2" max="16" />
+                </div>
+                <div class="form-group">
+                  <label>Encoder Layers</label>
+                  <input class="form-input" type="number" name="num_layers" value="3" min="1" max="12" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success" style="width:100%;margin-top:8px;justify-content:center;">
+                &#128640; Start Training
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" id="train-progress" style="display:none;">
+            <div class="card-header"><h3>Training Progress</h3></div>
+            <div class="card-body">
+              <div class="training-progress-card">
+                <div class="epoch-display"><span id="train-epoch">0</span> / <span id="train-total">5</span></div>
+                <div class="status-text" id="train-status">Initializing...</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="train-bar" style="width:0%;"></div>
+                </div>
+                <div id="train-metrics"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header"><h3>Training Chart</h3></div>
+            <div class="card-body">
+              <div class="chart-container" id="train-chart" style="min-height:250px;">
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">Train a model to see the chart</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ANALYTICS ============ -->
+    <section class="page-section" id="analytics">
+      <div class="page-header">
+        <h2>Analytics</h2>
+        <p>Detailed model performance metrics and training history visualization</p>
+      </div>
+
+      <div class="toolbar">
+        <label style="font-size:13px;font-weight:600;color:var(--text-secondary);">Model:</label>
+        <select class="form-select" id="analytics-model" style="min-width:200px;">
+          <option value="">Select model...</option>
+        </select>
+      </div>
+
+      <div id="analytics-metrics"></div>
+      <div id="analytics-charts" style="margin-top:20px;">
+        <div class="empty-state">
+          <div class="empty-icon">&#128202;</div>
+          <h3>Select a model</h3>
+          <p>Choose a trained model above to view its analytics</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
